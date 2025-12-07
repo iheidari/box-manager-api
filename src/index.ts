@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { connectDB } from "./db/connection";
 import { getStatus } from "./controllers/statusController";
 import { createBox } from "./controllers/boxController";
+import { getImageById } from "./controllers/imageController";
 
 // Load environment variables
 dotenv.config();
@@ -16,6 +17,9 @@ fastify.get("/status", getStatus);
 
 // POST endpoint to create a box
 fastify.post("/boxes", createBox);
+
+// GET endpoint to retrieve an image by imageId
+fastify.get("/images/:imageId", getImageById);
 
 // Start server
 const start = async () => {

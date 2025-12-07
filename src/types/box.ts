@@ -2,7 +2,7 @@
 export type ItemRequest = {
   id: string;
   name: string;
-  image: (string | Buffer)[];
+  image: (string | Buffer)[]; // Base64 strings or Buffers
 };
 
 export type BoxRequest = {
@@ -11,11 +11,11 @@ export type BoxRequest = {
   items: ItemRequest[];
 };
 
-// Database type - stores images as Buffer
+// Database type - stores imageIds (references to R2 storage)
 export type Item = {
   id: string;
   name: string;
-  image: Buffer[];
+  imageId: string[]; // Array of imageIds stored in R2
 };
 
 export type Box = {

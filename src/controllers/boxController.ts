@@ -1,6 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { Box } from "../models/Box";
 import { BoxRequest } from "../types/box";
+import { uploadImage } from "../services/r2Service";
 
 export const createBox = async (
   request: FastifyRequest,
@@ -27,21 +28,38 @@ export const createBox = async (
       }
     }
 
-    // Convert image data (assuming base64 strings) to Buffer
-    const processedItems = (boxData.items || []).map((item) => ({
-      ...item,
-      image: item.image.map((img) => {
-        // If image is a string (base64), convert to Buffer
-        if (typeof img === "string") {
-          return Buffer.from(img, "base64");
-        }
-        // If already a Buffer, return as is
-        return img instanceof Buffer ? img : Buffer.from(img);
-      }),
-    }));
+    // Upload images to R2 and get imageIds
+    const processedItems = await Promise.all(
+      (boxData.items || []).map(async (item) => {
+        // Upload each image to R2 and collect imageIds
+        const imageIds = await Promise.all(
+          item.image.map(async (img) => {
+            // Detect content type from base64 string if possible
+            let contentType = "image/jpeg"; // default
+            if (typeof img === "string" && img.includes("data:")) {
+              const match = img.match(/data:([^;]+)/);
+              if (match) {
+                contentType = match[1];
+              }
+            }
+
+            // Upload image to R2
+            const imageId = await uploadImage(img, contentType);
+            return imageId;
+          })
+        );
+
+        return {
+          id: item.id,
+          name: item.name,
+          imageId: imageIds,
+        };
+      })
+    );
 
     const processedBox = {
-      ...boxData,
+      id: boxData.id,
+      name: boxData.name,
       items: processedItems,
     };
 
@@ -57,7 +75,7 @@ export const createBox = async (
         items: savedBox.items.map((item) => ({
           id: item.id,
           name: item.name,
-          image: item.image.map((img) => img.toString("base64")), // Convert back to base64 for response
+          imageId: item.imageId,
         })),
       },
     });

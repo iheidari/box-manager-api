@@ -3,7 +3,7 @@ import mongoose, { Schema, Document } from "mongoose";
 export interface IItem {
   id: string;
   name: string;
-  image: Buffer[];
+  imageId: string[]; // Array of imageIds stored in R2
 }
 
 export interface IBox extends Document {
@@ -15,7 +15,7 @@ export interface IBox extends Document {
 const ItemSchema = new Schema<IItem>({
   id: { type: String, required: true },
   name: { type: String, required: true },
-  image: [{ type: Buffer, required: true }],
+  imageId: [{ type: String, required: true }],
 });
 
 const BoxSchema = new Schema<IBox>({
